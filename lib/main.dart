@@ -30,11 +30,14 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   File imageFile;
+  bool imageLoaded = false;
+  bool textLoaded = false;
 
   openGallery(BuildContext context) async {
     var picture = await ImagePicker.pickImage(source: ImageSource.gallery);
     this.setState(() {
       imageFile = picture;
+      imageLoaded = true;
     });
     Navigator.of(context).pop();
   }
@@ -43,6 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
     var picture = await ImagePicker.pickImage(source: ImageSource.camera);
     this.setState(() {
       imageFile = picture;
+      imageLoaded = true;
     });
     Navigator.of(context).pop();
   }
@@ -74,6 +78,15 @@ class _MyHomePageState extends State<MyHomePage> {
             },
           )),
     );
+  }
+
+  Function buttonDisbled(){
+    if(!imageLoaded){
+      return null;
+    }
+    else {
+      return () {};
+    }
   }
 
   Widget ImageView() {
@@ -129,14 +142,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   color: Colors.transparent,
                   width: MediaQuery.of(context).size.width,
                   height: 60,
-                  child: FlatButton(
+                  child: RaisedButton(
                     shape: new RoundedRectangleBorder(
                       borderRadius: new BorderRadius.circular(30.0),
                     ),
-                    onPressed: () {},
+                    onPressed: buttonDisbled(),
                     color: Colors.blue,
                     child: Text(
-                      "Button",
+                      "Extrair Texto",
                       style: TextStyle(
                         color: Colors.white,
                         fontFamily: 'Raleway',
