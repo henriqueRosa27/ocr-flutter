@@ -17,6 +17,7 @@ environment:
   sdk: ">=2.1.0 <3.0.0"
 
 dependencies:
+  tesseract_ocr: ^0.3.0
   image_picker:
   path_provider:
   flutter:
