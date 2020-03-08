@@ -32,22 +32,27 @@ class _MyHomePageState extends State<MyHomePage> {
   File imageFile;
   bool imageLoaded = false;
   bool textLoaded = false;
+  String textExtracted;
 
   openGallery(BuildContext context) async {
     var picture = await ImagePicker.pickImage(source: ImageSource.gallery);
-    this.setState(() {
-      imageFile = picture;
-      imageLoaded = true;
-    });
+    if (picture != null) {
+      this.setState(() {
+        imageFile = picture;
+        imageLoaded = true;
+      });
+    }
     Navigator.of(context).pop();
   }
 
   openCamera(BuildContext context) async {
     var picture = await ImagePicker.pickImage(source: ImageSource.camera);
-    this.setState(() {
-      imageFile = picture;
-      imageLoaded = true;
-    });
+    if (picture != null) {
+      this.setState(() {
+        imageFile = picture;
+        imageLoaded = true;
+      });
+    }
     Navigator.of(context).pop();
   }
 
@@ -80,12 +85,30 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Function buttonDisbled(){
-    if(!imageLoaded){
-      return null;
+  void _extractText() async {
+    String text;
+
+    try {
+      text = "";
+    } on Exception {
+      text = 'Falha ao extrair texto!';
     }
-    else {
-      return () {};
+
+    if (!mounted) return;
+
+    setState(() {
+      textExtracted = text;
+      textLoaded = true;
+    });
+  }
+
+  Function buttonDisbled() {
+    if (!imageLoaded) {
+      return null;
+    } else {
+      return () {
+        _extractText();
+      };
     }
   }
 
@@ -101,6 +124,34 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     } else {
       return Image.file(imageFile, height: 300, fit: BoxFit.fill);
+    }
+  }
+
+  Widget _textView() {
+    if (textLoaded) {
+      return Card(
+          child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+            Text(
+              "Texto Extraído",
+              style: TextStyle(
+                color: Colors.black,
+                fontFamily: 'Raleway',
+                fontSize: 25.0,
+              ),
+            ),
+            Text(
+              textExtracted,
+              style: TextStyle(
+                color: Colors.black,
+                fontFamily: 'Raleway',
+                fontSize: 20.0,
+              ),
+            )
+          ]));
+    } else {
+      return null;
     }
   }
 
