@@ -19,6 +19,7 @@ environment:
 dependencies:
   image_picker:
   path_provider:
+  firebase_ml_vision:
   flutter:
     sdk: flutter
 

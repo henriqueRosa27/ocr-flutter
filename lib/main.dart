@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 
 void main() => runApp(MyApp());
 
@@ -89,8 +90,12 @@ class _MyHomePageState extends State<MyHomePage> {
     String text;
 
     try {
-      text = "";
-    } on Exception {
+      FirebaseVisionImage ourImage = FirebaseVisionImage.fromFile(imageFile);
+      TextRecognizer recognizeText = FirebaseVision.instance.textRecognizer();
+      VisionText readText = await recognizeText.processImage(ourImage);
+
+      text = readText.text;
+    } on Exception catch (e) {
       text = 'Falha ao extrair texto!';
     }
 
@@ -129,8 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _textView() {
     if (textLoaded) {
-      return Card(
-          child: Column(
+      return Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
             Text(
@@ -149,7 +153,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 fontSize: 20.0,
               ),
             )
-          ]));
+          ]);
     } else {
       return null;
     }
@@ -213,6 +217,10 @@ class _MyHomePageState extends State<MyHomePage> {
               Padding(
                 padding: EdgeInsets.only(top: 10),
                 child: ImageView(),
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 10),
+                child: _textView(),
               ),
             ],
           ),
