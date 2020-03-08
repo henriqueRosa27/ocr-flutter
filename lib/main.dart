@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'OCR - Flutter'),
+      home: MyHomePage(title: 'OCR - Flutter - Tesseract'),
     );
   }
 }
@@ -33,26 +33,31 @@ class _MyHomePageState extends State<MyHomePage> {
   File imageFile;
   bool imageLoaded = false;
   bool textLoaded = false;
+  String textExtracted;
 
   openGallery(BuildContext context) async {
     var picture = await ImagePicker.pickImage(source: ImageSource.gallery);
-    this.setState(() {
-      imageFile = picture;
-      imageLoaded = true;
-    });
+    if (picture != null) {
+      this.setState(() {
+        imageFile = picture;
+        imageLoaded = true;
+      });
+    }
     Navigator.of(context).pop();
   }
 
   openCamera(BuildContext context) async {
     var picture = await ImagePicker.pickImage(source: ImageSource.camera);
-    this.setState(() {
-      imageFile = picture;
-      imageLoaded = true;
-    });
+    if (picture != null) {
+      this.setState(() {
+        imageFile = picture;
+        imageLoaded = true;
+      });
+    }
     Navigator.of(context).pop();
   }
 
-  void ShowActionSheet(BuildContext context) {
+  void _showActionSheet(BuildContext context) {
     showCupertinoModalPopup(
       context: context,
       builder: (BuildContext context) => CupertinoActionSheet(
@@ -81,16 +86,37 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Function buttonDisbled(){
-    if(!imageLoaded){
+  Function buttonDisbled() {
+    if (!imageLoaded) {
       return null;
-    }
-    else {
-      return () {};
+    } else {
+      return () {
+        _extractText();
+      };
     }
   }
 
-  Widget ImageView() {
+  void _extractText() async {
+    String text;
+
+    try {
+      text = await TesseractOcr.extractText(imageFile.path, language: "por");
+    } on Exception {
+      text = 'Falha ao extrair texto!';
+    }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) return;
+
+    setState(() {
+      textExtracted = text;
+      textLoaded = true;
+    });
+  }
+
+  Widget _imageView() {
     if (imageFile == null) {
       return Text(
         "Nenhuma Imagem Selecionada",
@@ -105,6 +131,33 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Widget _textView() {
+    if (textLoaded) {
+      return Card(child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              "Texto Extraído",
+              style: TextStyle(
+                color: Colors.black,
+                fontFamily: 'Raleway',
+                fontSize: 25.0,
+              ),
+            ),
+            Text(
+              textExtracted,
+              style: TextStyle(
+                color: Colors.black,
+                fontFamily: 'Raleway',
+                fontSize: 20.0,
+              ),
+            )
+          ]));
+    } else {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,60 +165,69 @@ class _MyHomePageState extends State<MyHomePage> {
           title: Text(widget.title),
         ),
         body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Container(
-                color: Colors.transparent,
-                width: MediaQuery.of(context).size.width,
-                height: 60,
-                child: FlatButton(
-                  shape: new RoundedRectangleBorder(
-                    borderRadius: new BorderRadius.circular(30.0),
-                  ),
-                  onPressed: () {
-                    ShowActionSheet(context);
-                  },
-                  color: Colors.blue,
-                  child: Text(
-                    "Selecionar Imagem",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontFamily: 'Raleway',
-                      fontSize: 22.0,
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.only(top: 5),
-                child: Container(
-                  color: Colors.transparent,
-                  width: MediaQuery.of(context).size.width,
-                  height: 60,
-                  child: RaisedButton(
-                    shape: new RoundedRectangleBorder(
-                      borderRadius: new BorderRadius.circular(30.0),
-                    ),
-                    onPressed: buttonDisbled(),
-                    color: Colors.blue,
-                    child: Text(
-                      "Extrair Texto",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontFamily: 'Raleway',
-                        fontSize: 22.0,
+            child: SingleChildScrollView(
+              child: Container(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Container(
+                      color: Colors.transparent,
+                      width: MediaQuery.of(context).size.width,
+                      height: 60,
+                      child: FlatButton(
+                        shape: new RoundedRectangleBorder(
+                          borderRadius: new BorderRadius.circular(30.0),
+                        ),
+                        onPressed: () {
+                          _showActionSheet(context);
+                        },
+                        color: Colors.blue,
+                        child: Text(
+                          "Selecionar Imagem",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'Raleway',
+                            fontSize: 22.0,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 5),
+                      child: Container(
+                        color: Colors.transparent,
+                        width: MediaQuery.of(context).size.width,
+                        height: 60,
+                        child: RaisedButton(
+                          shape: new RoundedRectangleBorder(
+                            borderRadius: new BorderRadius.circular(30.0),
+                          ),
+                          onPressed: buttonDisbled(),
+                          color: Colors.blue,
+                          child: Text(
+                            "Extrair Texto",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'Raleway',
+                              fontSize: 22.0,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 10),
+                      child: _imageView(),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 10),
+                      child: _textView(),
+                    ),
+                  ],
+                )
               ),
-              Padding(
-                padding: EdgeInsets.only(top: 10),
-                child: ImageView(),
-              ),
-            ],
-          ),
-        ));
+            )
+        )
+    );
   }
 }
